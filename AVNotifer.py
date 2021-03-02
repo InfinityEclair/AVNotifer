@@ -1,5 +1,5 @@
 import os
-from tkinter import messagebox
+import sys
 import datetime
 import getpass
 month = {"1":"Jan","2":"Feb","3":"Mar","4":"Apr","5":"May","6":"Jun","7":"Jul","8":"Aug","9":"Sep","10":"Oct","11":"Nov","12":"Dec"}
@@ -8,6 +8,51 @@ try:
 except:
     print("this script is run by root! please do not use sudo command.")
     exit()
+if sys.version_info.major == 2:
+    print("This script is running on python 2.x!Please use python 3.x!")
+    if os.system("python3 --version") == 1:
+        sys.stdout.write("Python3 isn't be installed on this system!Do you want to install python3 via Homebrew?(Y/n):")
+        while True:
+            a = raw_input()
+            if a.lower() == "y" or a.lower() == "n":
+                break
+            elif a == "":
+                a = "y"
+                break
+            else:
+                sys.stdout.write("Do you want to install it via Homebrew?(Y/n):")
+        if a.lower() == "y":
+            if os.system("brew list") == 1:
+                sys.stdout.write("Homebrew isn't installed on this system!Do you want to install it?(Y/n):")
+                while True:
+                    b = raw_input()
+                    if b.lower() == "y" or b.lower() == "n":
+                        break
+                    elif b == "":
+                        b = "y"
+                        break
+                    else:
+                        sys.stdout.write("Homebrew isn't installed on this system!Do you want to install it?(Y/n):")
+                if b.lower() == "y":
+                    if os.system("/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"") == 0:
+                        if os.system("brew install python@3.9") == 1:
+                            print("brew has been installed, but Python3 can't be installed!")
+                        else:
+                            print("success! please re-run on python 3!")
+                    else:
+                        print("brew can't be installed!")
+                else:
+                    print("abort.")
+            else:
+                if os.system("brew install python@3.9") == 0:
+                    print("success!please re-run on python 3!")
+                else:
+                    print("brew has been installed, but Python3 can't be installed!")
+        else:
+            print("abort.")
+        exit()
+    else:
+        exit()
 user = getpass.getuser()
 td = "\""+month[str(int(str(datetime.date.today()).split("-")[1]))]+ " " +str(int(str(datetime.date.today()).split("-")[2]))+"\""
 if len(td) == 7:
@@ -89,7 +134,6 @@ os.system("clamscan "+hdir+" --infected > result.txt")
 os.chdir("/Applications")
 os.system("clamscan "+app+" --infected > /Users/"+user+"/result2.txt")
 os.chdir("/Users/"+user)
-#  ----------リザルトの出力-----------------
 files = []
 for x in range(0,2):
     if x == 0:
