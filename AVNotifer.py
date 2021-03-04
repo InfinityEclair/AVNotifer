@@ -3,19 +3,19 @@ import sys
 import datetime
 from tkinter import messagebox
 import getpass
-month = {"1": "Jan", "2": "Feb", "3": "Mar", "4": "Apr", "5": "May", "6": "Jun",
-         "7": "Jul", "8": "Aug", "9": "Sep", "10": "Oct", "11": "Nov", "12": "Dec"}
-if getpass.getuser() == "root":
+checking = 1
+cd = __file__
+if checking == 0 and getpass.getuser() == "root":
     print("this script is run by root! please do not use sudo command.")
     exit()
-if os.system("brew list") == 1:
+if os.system("brew list") != 0:
     sys.stdout.write("Homebrew isn't installed on this system!Do you want to install?(Y/n):")
     while True:
         an = sys.stdin.readline()
-        if an.lower() == "y" or an == "":
-            if os.system("""/bin/bash -c \"$(curl -fsSL https://raw.githubu
-            sercontent.com/Homebrew/install/HEAD/install.sh)\"""") == 0:
+        if an.lower() == "y" or an == "\n":
+            if os.system("""/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"""") == 0:
                 print("Success!")
+                break
             else:
                 print("""Brew can't be installed!Please check 
                 if you run python on Rosetta2 if you use an Apple Silicon Mac!""")
@@ -25,7 +25,7 @@ if os.system("brew list") == 1:
             exit()
 if sys.version_info.major == 2:
     print("This script is running on python 2.x!Please use python 3.x!")
-    if os.system("python3 --version") == 1:
+    if os.system("python3 --version") != 0:
         while True:
             sys.stdout.\
                 write("Python3 isn't installed on this system!Do you want to install python3 via Homebrew?(Y/n):")
@@ -43,28 +43,92 @@ if sys.version_info.major == 2:
     else:
         print("abort.")
         exit()
-if os.system("clamscan --version") == 1:
+f = open(file=__file__, encoding="UTF-8", mode="r")
+checker = f.readlines()
+f.close()
+if os.system("clamscan --version") != 0:
     while True:
         an = input("clamAV hasn't been installed! Do you want to install via Homebrew?(Y/n):")
         if an.lower() == "y" or an.lower() == "n" or an == "":
             break
     if an.lower() == "y" or an == "":
         if os.system("brew install clamAV") == 0:
+            os.system("cp /usr/local/etc/clamav/freshclam.conf.sample freshclam.conf")
+            os.system("cp /usr/local/etc/clamav/freshclam.conf.sample clamd.conf")
+            f = open(file="/usr/local/etc/clamav/freshclam.conf.sample", mode="r", encoding="UTF-8")
+            conf = f.readlines()
+            f.close()
+            conf[7] = "\n"
+            f = open(file="freshclam.conf", mode="w", encoding="UTF-8")
+            f.close()
+            for x in conf:
+                f = open(file="freshclam.conf", mode="a", encoding="UTF-8")
+                f.write(x)
+                f.close()
+            os.system("sudo cp freshclam.conf /usr/local/etc/clamav")
+            f = open(file="/usr/local/etc/clamav/clamd.conf.sample", mode="r", encoding="UTF-8")
+            conf = f.readlines()
+            f.close()
+            conf[7] = "\n"
+            conf[95] = "LocalSocket /usr/local/var/run/clamav/clamd.sock\n"
+            conf[111] = "TCPSocket 3310"
+            conf[119] = "TCPAddr 127.0.0.1"
+            f = open(file="clamd.conf", mode="w", encoding="UTF-8")
+            f.close()
+            for x in conf:
+                f = open(file="clamd.conf", mode="a", encoding="UTF-8")
+                f.write(x)
+                f.close()
+            os.system("sudo cp clamd.conf /usr/local/etc/clamav")
+            os.system("freshclam -v")
             print("Success!")
         else:
             print("ClamAV can't be installed!")
     else:
         print("abort.")
         exit()
-user = getpass.getuser()
-td = "\""+month[str(int(str(datetime.date.today()).split("-")[1]))] + " " + \
-     str(int(str(datetime.date.today()).split("-")[2]))+"\""
-if len(td) == 7:
+for x in range(0, len(checker)):
+    if checker[x] == "checking = 0\n":
+        while True:
+            sel = input("You can set this script when you log in this account.Do you want to?(y/N):")
+            if sel.lower() == "" or sel.lower() == "y" or sel.lower() == "n":
+                break
+        if sel.lower() == "y":
+            tmp = __file__.split("/")
+            cd = ""
+            for t in range(0, len(tmp)-1):
+                cd += "/"+tmp[t]
+            os.chdir(cd)
+            f = open("AVNotiferstarter.command", mode="w", encoding="UTF-8")
+            f.write("#! /bin/zsh\n")
+            f.write("python3 "+cd[1:]+"/AVNotifer.py\n")
+            f.close()
+            os.system("chmod u+x AVNotiferstarter.command")
+            os.system("open -a /System/Applications/System\ Preferences.app")
+            messagebox.showwarning("setting required","Please set AVNotiferstarter.command by going User and Group -> Login activity.")
+        checker[x] = "checking = 1\n"
+        f = open(file=__file__, mode="w", encoding="UTF-8")
+        f.close()
+        for y in range(0, len(checker)):
+            f = open(file=__file__, mode="a", encoding="UTF-8")
+            f.write(checker[y])
+            f.close()
+        break
+Base = __file__.split("/")
+now=""
+for x in range(0, len(Base)-1):
+	now += "/"+Base[x]
+if Base[-2] != ".AV_DONOTREMOVE":
+    now += "/.AV_DONOTREMOVE"
+f = open(file=now+"/user.txt", mode="r", encoding="UTF-8")
+user = f.readline()
+f.close()
+td = "\""+str(int(str(datetime.date.today()).split("-")[1])) + " " +str(int(str(datetime.date.today()).split("-")[2]))+"\""
+if td[-3] == " ":
     td = td.replace(" ", "  ")
-yes = "\""+str(month[str(int(str(datetime.date.today()-datetime.timedelta(days=1)).split("-")[1]))]
-               + " "+str(int(str(datetime.date.today()-datetime.timedelta(days=1)).split("-")[2])))+"\""
+yes = "\""+str(int(str(datetime.date.today()-datetime.timedelta(days=1)).split("-")[1]))+ " "+str(int(str(datetime.date.today()-datetime.timedelta(days=1)).split("-")[2]))+ "\""
 os.chdir("/Users/"+user)
-if len(yes) == 7:
+if yes[-3] == " ":
     yes = yes.replace(" ", "  ")
 print(td)
 print(yes)
@@ -123,6 +187,7 @@ for x in range(0, len(edited)):
     for y in range(1, len(edited[x])):
         unite += " "+edited[x][y]
     edited[x] = unite
+print(edited)
 hdir = ""
 app = ""
 for x in edited:
@@ -130,11 +195,13 @@ for x in edited:
         hdir += " \"{}\"".format(x)
     if os.system("stat /Applications/\""+x+"\"") == 0:
         app += " \"{}\"".format(x)
-os.system("freshclam ClamAV update")
+#os.system("freshclam ClamAV update")
 os.system("clamscan "+hdir+" --infected > result.txt")
 os.chdir("/Applications")
 os.system("clamscan "+app+" --infected > /Users/"+user+"/result2.txt")
 os.chdir("/Users/"+user)
+print(hdir)
+print(app)
 files = []
 resultfiles = ""
 for x in range(0, 2):
