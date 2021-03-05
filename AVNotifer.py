@@ -84,6 +84,7 @@ if os.system("clamscan --version") != 0:
             print("Success!")
         else:
             print("ClamAV can't be installed!")
+            exit()
     else:
         print("abort.")
         exit()
@@ -116,22 +117,18 @@ for x in range(0, len(checker)):
         break
 Base = __file__.split("/")
 now=""
+user = getpass.getuser()
 for x in range(0, len(Base)-1):
 	now += "/"+Base[x]
-if Base[-2] != ".AV_DONOTREMOVE":
-    now += "/.AV_DONOTREMOVE"
-f = open(file=now+"/user.txt", mode="r", encoding="UTF-8")
-user = f.readline()
-f.close()
 td = "\""+str(int(str(datetime.date.today()).split("-")[1])) + " " +str(int(str(datetime.date.today()).split("-")[2]))+"\""
 if td[-3] == " ":
     td = td.replace(" ", "  ")
+atd = td.replace("\"", "").replace("  "," ")
 yes = "\""+str(int(str(datetime.date.today()-datetime.timedelta(days=1)).split("-")[1]))+ " "+str(int(str(datetime.date.today()-datetime.timedelta(days=1)).split("-")[2]))+ "\""
 os.chdir("/Users/"+user)
 if yes[-3] == " ":
     yes = yes.replace(" ", "  ")
-print(td)
-print(yes)
+ayes = yes.replace("\"", "").replace("  "," ")
 t = 0
 try:
     while True:
@@ -142,22 +139,33 @@ except FileNotFoundError:
     targ = "text" + str(t)+".txt"
     f = open(file=targ, mode="w", encoding="UTF-8")
     f.close()
-    targ_filelist = ["/Applications", ""]
-    kekka = []
+    targ_filelist = ["/Applications", "/Users/"+user]
+    kekka = {}
     for u in targ_filelist:
         os.system("ls -l")
-        os.system("ls -l "+u+" | grep "+td+" > "+targ)
+        os.system("(ls -l "+u+" | grep "+td+" && ls -l"+u+" | grep"+yes+") > "+targ)
         f = open(file=targ, mode="r", encoding="UTF-8")
         files = f.readlines()
         f.close()
         for x in range(0, len(files)):
             # noinspection PyTypeChecker
             files[x] = files[x].rstrip().split(" ")
+        for s in range(0,len(files)):
+            k = 0
+            while k < len(files[s]):
+                if files[s][k] == "":
+                    del files[s][k]
+                else:
+                    k += 1
         for x in range(0, len(files)):
             for y in range(0, len(files[x])):
-                if files[x][y] == yes.split(" ")[0]:
+                if files[x][y] == atd.split(" ")[0] and files[x][y+1] == atd.split(" ")[1]:
                     del files[x][:y+3]
                     break
+                elif files[x][y] == ayes.split(" ")[0] and files[x][y+1] == ayes.split(" ")[1]:
+                    del files[x][:y+3]
+                    break
+            print(files)
             if len(files[x]) > 1:
                 tmp = files[x][0]
                 for z in range(1, len(files[x])):
@@ -165,66 +173,33 @@ except FileNotFoundError:
                 files[x] = tmp
             else:
                 files[x] = files[x][0]
+        kekka[u] = ""
+        print(files)
         for x in files:
-            kekka.append(x)
-        os.system("rm " + targ)
-edited = []
+            kekka[u] += " \""+x+"\""
+print(kekka)
+os.system("freshclam ClamAV update")
+infected_files = []
 for x in kekka:
-    temp = x.split(" ")
-    t = 0
-    while t < len(temp):
-        if temp[t] == "":
-            del temp[t]
-        else:
-            t += 1
-    for y in range(0, len(temp)-1):
-        if "\""+temp[y]+" "+temp[y+1]+"\"" == yes or "\""+temp[y]+" "+temp[y+1]+"\"" == td:
-            edited.append(temp[y+3:])
-        elif "\""+temp[y]+"  "+temp[y+1]+"\"" == yes or "\""+temp[y]+"  "+temp[y+1]+"\"" == td:
-            edited.append(temp[y+3:])
-for x in range(0, len(edited)):
-    unite = edited[x][0]
-    for y in range(1, len(edited[x])):
-        unite += " "+edited[x][y]
-    edited[x] = unite
-print(edited)
-hdir = ""
-app = ""
-for x in edited:
-    if os.system("stat /Users/"+user+"/\""+x+"\"") == 0:
-        hdir += " \"{}\"".format(x)
-    if os.system("stat /Applications/\""+x+"\"") == 0:
-        app += " \"{}\"".format(x)
-#os.system("freshclam ClamAV update")
-os.system("clamscan "+hdir+" --infected > result.txt")
-os.chdir("/Applications")
-os.system("clamscan "+app+" --infected > /Users/"+user+"/result2.txt")
-os.chdir("/Users/"+user)
-print(hdir)
-print(app)
-files = []
-resultfiles = ""
-for x in range(0, 2):
-    if x == 0:
-        resultfiles = "/result.txt"
-    elif x == 1:
-        resultfiles = "/result2.txt"
-    f = open(file="/Users/"+user+resultfiles, mode="r", encoding="UTF-8")
+    os.chdir(x)
+    os.system("clamscan "+kekka[x]+" --infected > "+"/Users/"+user+"/result.txt")
+    f = open(file="/Users/"+user+"/result.txt", mode="r", encoding="UTF-8")
     pattern = f.readlines()
     f.close()
     end = 0
-    for t in range(0, len(pattern)):
-        if pattern[t].replace("\n", "") == "----------- SCAN SUMMARY -----------":
-            end = t
+    for h in range(0, len(pattern)):
+        if pattern[h].replace("\n", "") == "----------- SCAN SUMMARY -----------":
+            end = h
             break
         else:
             pass
     del pattern[end - 1:]
     print(pattern)
     for y in pattern:
-        files.append(y)
-if len(files) >= 1:
+        infected_files.append(y)
+if len(infected_files) >= 1:
     text = ""
-    for x in files:
+    for x in infected_files:
         text += x
     messagebox.showwarning("Virus alert", "Virus has been detected!\n" + text)
+os.system("rm "+targ)
