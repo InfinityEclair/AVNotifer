@@ -4,7 +4,6 @@ import datetime
 from tkinter import messagebox
 import getpass
 checking = 1
-cd = __file__
 if checking == 0 and getpass.getuser() == "root":
     print("this script is run by root! please do not use sudo command.")
     exit()
@@ -13,7 +12,7 @@ if os.system("brew list") != 0:
     while True:
         an = sys.stdin.readline()
         if an.lower() == "y" or an == "\n":
-            if os.system("""/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"""") == 0:
+            if os.system("/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\"") == 0:
                 print("Success!")
                 break
             else:
@@ -27,8 +26,7 @@ if sys.version_info.major == 2:
     print("This script is running on python 2.x!Please use python 3.x!")
     if os.system("python3 --version") != 0:
         while True:
-            sys.stdout.\
-                write("Python3 isn't installed on this system!Do you want to install python3 via Homebrew?(Y/n):")
+            sys.stdout.write("Python3 isn't installed on this system!Do you want to install python3 via Homebrew?(Y/n):")
             a = sys.stdin.readline()
             if a.lower() == "y" or a.lower() == "n" or a == "":
                 break
@@ -53,32 +51,26 @@ if os.system("clamscan --version") != 0:
             break
     if an.lower() == "y" or an == "":
         if os.system("brew install clamAV") == 0:
-            os.system("cp /usr/local/etc/clamav/freshclam.conf.sample freshclam.conf")
-            os.system("cp /usr/local/etc/clamav/freshclam.conf.sample clamd.conf")
             f = open(file="/usr/local/etc/clamav/freshclam.conf.sample", mode="r", encoding="UTF-8")
             conf = f.readlines()
             f.close()
             conf[7] = "\n"
             f = open(file="freshclam.conf", mode="w", encoding="UTF-8")
-            f.close()
             for x in conf:
-                f = open(file="freshclam.conf", mode="a", encoding="UTF-8")
                 f.write(x)
-                f.close()
+            f.close()
             os.system("sudo cp freshclam.conf /usr/local/etc/clamav")
             f = open(file="/usr/local/etc/clamav/clamd.conf.sample", mode="r", encoding="UTF-8")
             conf = f.readlines()
             f.close()
             conf[7] = "\n"
             conf[95] = "LocalSocket /usr/local/var/run/clamav/clamd.sock\n"
-            conf[111] = "TCPSocket 3310"
-            conf[119] = "TCPAddr 127.0.0.1"
+            conf[111] = "TCPSocket 3310\n"
+            conf[119] = "TCPAddr 127.0.0.1\n"
             f = open(file="clamd.conf", mode="w", encoding="UTF-8")
-            f.close()
             for x in conf:
-                f = open(file="clamd.conf", mode="a", encoding="UTF-8")
                 f.write(x)
-                f.close()
+            f.close()
             os.system("sudo cp clamd.conf /usr/local/etc/clamav")
             os.system("freshclam -v")
             print("Success!")
@@ -88,47 +80,41 @@ if os.system("clamscan --version") != 0:
     else:
         print("abort.")
         exit()
-for x in range(0, len(checker)):
-    if checker[x] == "checking = 0\n":
-        while True:
-            sel = input("You can set this script when you log in this account.Do you want to?(y/N):")
-            if sel.lower() == "" or sel.lower() == "y" or sel.lower() == "n":
-                break
-        if sel.lower() == "y":
-            tmp = __file__.split("/")
-            cd = ""
-            for t in range(0, len(tmp)-1):
-                cd += "/"+tmp[t]
-            os.chdir(cd)
-            f = open("AVNotiferstarter.command", mode="w", encoding="UTF-8")
-            f.write("#! /bin/zsh\n")
-            f.write("python3 "+cd[1:]+"/AVNotifer.py\n")
-            f.close()
-            os.system("chmod u+x AVNotiferstarter.command")
-            os.system("open -a /System/Applications/System\ Preferences.app")
-            messagebox.showwarning("setting required","Please set AVNotiferstarter.command by going User and Group -> Login activity.")
-        checker[x] = "checking = 1\n"
-        f = open(file=__file__, mode="w", encoding="UTF-8")
+if checking == 0:
+    while True:
+        sel = input("You can set this script when you log in this account.Do you want to?(y/N):")
+        if sel.lower() == "" or sel.lower() == "y" or sel.lower() == "n":
+            break
+    if sel.lower() == "y":
+        tmp = __file__.split("/")
+        cd = ""
+        for t in range(0, len(tmp)-1):
+            cd += "/"+tmp[t]
+        os.chdir(cd)
+        f = open("AVNotiferstarter.command", mode="w", encoding="UTF-8")
+        f.write("#! /bin/zsh\n")
+        f.write("python3 "+cd[1:]+"/AVNotifer.py\n")
         f.close()
-        for y in range(0, len(checker)):
-            f = open(file=__file__, mode="a", encoding="UTF-8")
-            f.write(checker[y])
-            f.close()
-        break
-Base = __file__.split("/")
-now=""
+        os.system("chmod u+x AVNotiferstarter.command")
+        os.system("open -a /System/Applications/System\ Preferences.app")
+        messagebox.showwarning("setting required","Please set AVNotiferstarter.command by going User and Group -> Login activity.")
+    checker[x] = "checking = 1\n"
+    f = open(file=__file__, mode="w", encoding="UTF-8")
+    f.close()
+    for y in range(0, len(checker)):
+        f = open(file=__file__, mode="a", encoding="UTF-8")
+        f.write(checker[y])
+        f.close()
 user = getpass.getuser()
-for x in range(0, len(Base)-1):
-	now += "/"+Base[x]
 td = "\""+str(int(str(datetime.date.today()).split("-")[1])) + " " +str(int(str(datetime.date.today()).split("-")[2]))+"\""
+atd = td.replace("\"", "")
 if td[-3] == " ":
     td = td.replace(" ", "  ")
-atd = td.replace("\"", "").replace("  "," ")
 yes = "\""+str(int(str(datetime.date.today()-datetime.timedelta(days=1)).split("-")[1]))+ " "+str(int(str(datetime.date.today()-datetime.timedelta(days=1)).split("-")[2]))+ "\""
 os.chdir("/Users/"+user)
+ayes = yes.replace("\"", "")
 if yes[-3] == " ":
     yes = yes.replace(" ", "  ")
-ayes = yes.replace("\"", "").replace("  "," ")
 t = 0
 try:
     while True:
@@ -148,7 +134,6 @@ except FileNotFoundError:
         files = f.readlines()
         f.close()
         for x in range(0, len(files)):
-            # noinspection PyTypeChecker
             files[x] = files[x].rstrip().split(" ")
         for s in range(0,len(files)):
             k = 0
@@ -165,7 +150,6 @@ except FileNotFoundError:
                 elif files[x][y] == ayes.split(" ")[0] and files[x][y+1] == ayes.split(" ")[1]:
                     del files[x][:y+3]
                     break
-            print(files)
             if len(files[x]) > 1:
                 tmp = files[x][0]
                 for z in range(1, len(files[x])):
@@ -174,10 +158,8 @@ except FileNotFoundError:
             else:
                 files[x] = files[x][0]
         kekka[u] = ""
-        print(files)
         for x in files:
             kekka[u] += " \""+x+"\""
-print(kekka)
 os.system("freshclam ClamAV update")
 infected_files = []
 for x in kekka:
@@ -186,15 +168,11 @@ for x in kekka:
     f = open(file="/Users/"+user+"/result.txt", mode="r", encoding="UTF-8")
     pattern = f.readlines()
     f.close()
-    end = 0
     for h in range(0, len(pattern)):
         if pattern[h].replace("\n", "") == "----------- SCAN SUMMARY -----------":
             end = h
             break
-        else:
-            pass
     del pattern[end - 1:]
-    print(pattern)
     for y in pattern:
         infected_files.append(y)
 if len(infected_files) >= 1:
